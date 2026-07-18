@@ -79,20 +79,22 @@ func (o *rootOptions) client() (*appsflyer.Client, error) {
 
 func (o *rootOptions) write(cmd *cobra.Command, body io.ReadCloser) error {
 	defer body.Close()
-	out := cmd.OutOrStdout()
-	if o.output != "" {
-		f, err := os.Create(o.output)
-		if err != nil {
-			return err
-		}
-		defer f.Close()
-		out = f
-	}
-	if _, err := io.Copy(out, body); err != nil {
+	if o.output == "" {
+		_, err := io.Copy(cmd.OutOrStdout(), body)
 		return err
 	}
-	if o.output != "" {
-		fmt.Fprintf(cmd.ErrOrStderr(), "wrote %s\n", o.output)
+	f, err := os.Create(o.output)
+	if err != nil {
+		return err
 	}
+	if _, err := io.Copy(f, body); err != nil {
+		_ = f.Close()
+		return err
+	}
+	// A failed close can mean a partial write, so it must not be ignored.
+	if err := f.Close(); err != nil {
+		return err
+	}
+	fmt.Fprintf(cmd.ErrOrStderr(), "wrote %s\n", o.output)
 	return nil
 }
