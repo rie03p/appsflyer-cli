@@ -107,11 +107,14 @@ The date range is limited to 31 days by the API. Filters accept `pid`, `c`, `af_
 ## Development
 
 ```sh
+go build -o afcli ./cmd/afcli
 go test ./...
 go vet ./...
 ```
 
-The API client lives in `internal/appsflyer` and is independent of the CLI layer (`internal/cli`); both are covered by tests against `httptest` servers.
+The API client lives in `internal/appsflyer` (one file per API family, no CLI dependencies) and is independent of the command tree in `internal/cli` (one file per command); both are covered by tests against `httptest` servers. To support a new AppsFlyer API, add a client file and a matching command file.
+
+`main` is the only long-lived branch ([GitHub Flow](https://docs.github.com/en/get-started/using-github/github-flow)): topic branches merge into it via PR once CI passes, and releases are cut by pushing a [semver](https://semver.org/) tag (`vX.Y.Z`), which triggers goreleaser to publish cross-platform binaries to GitHub Releases. Commit messages follow [Conventional Commits](https://www.conventionalcommits.org/) — release notes are generated from them.
 
 ## License
 
