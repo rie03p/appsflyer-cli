@@ -8,6 +8,7 @@ import (
 	"time"
 
 	"github.com/rie03p/appsflyer-cli/internal/appsflyer"
+	"github.com/rie03p/appsflyer-cli/internal/config"
 	"github.com/spf13/cobra"
 )
 
@@ -38,11 +39,12 @@ the APPSFLYER_API_TOKEN environment variable.`,
 		SilenceErrors: true,
 	}
 
-	cmd.PersistentFlags().StringVar(&opts.token, "token", "", "AppsFlyer API V2 token (defaults to $APPSFLYER_API_TOKEN)")
+	cmd.PersistentFlags().StringVar(&opts.token, "token", "", "AppsFlyer API V2 token (overrides $APPSFLYER_API_TOKEN and the token stored by auth login)")
 	cmd.PersistentFlags().StringVar(&opts.baseURL, "base-url", appsflyer.DefaultBaseURL, "API base URL")
 	cmd.PersistentFlags().DurationVar(&opts.timeout, "timeout", 5*time.Minute, "HTTP request timeout")
 	cmd.PersistentFlags().StringVarP(&opts.output, "output", "o", "", "write the report to a file instead of stdout")
 
+	cmd.AddCommand(newAuthCmd())
 	cmd.AddCommand(newRawCmd(opts))
 	cmd.AddCommand(newAggCmd(opts))
 	cmd.AddCommand(newMasterCmd(opts))
@@ -56,7 +58,14 @@ func (o *rootOptions) client() (*appsflyer.Client, error) {
 		token = os.Getenv("APPSFLYER_API_TOKEN")
 	}
 	if token == "" {
-		return nil, fmt.Errorf("no API token: pass --token or set APPSFLYER_API_TOKEN")
+		cfg, err := config.Load()
+		if err != nil {
+			return nil, err
+		}
+		token = cfg.Token
+	}
+	if token == "" {
+		return nil, fmt.Errorf("no API token: run \"afcli auth login\", pass --token, or set APPSFLYER_API_TOKEN")
 	}
 	return appsflyer.New(token,
 		appsflyer.WithBaseURL(o.baseURL),

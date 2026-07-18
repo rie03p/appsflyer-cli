@@ -86,6 +86,7 @@ func TestMasterCommandRejectsUnknownFilter(t *testing.T) {
 }
 
 func TestMissingTokenError(t *testing.T) {
+	t.Setenv("AFCLI_CONFIG_DIR", t.TempDir())
 	t.Setenv("APPSFLYER_API_TOKEN", "")
 	_, err := run(t,
 		"raw", "installs_report",
