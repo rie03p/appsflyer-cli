@@ -32,8 +32,8 @@ func NewRootCmd() *cobra.Command {
 		Long: `afcli fetches AppsFlyer reports from the command line.
 
 It covers the Pull API (raw and aggregate data) and the Master API.
-Authentication uses an AppsFlyer API V2 token, taken from --token or
-the APPSFLYER_API_TOKEN environment variable.`,
+Authentication uses an AppsFlyer API V2 token: run "afcli auth login"
+once to store it, or pass --token / set APPSFLYER_API_TOKEN.`,
 		Version:       Version,
 		SilenceUsage:  true,
 		SilenceErrors: true,
