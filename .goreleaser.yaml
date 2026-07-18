@@ -28,6 +28,7 @@ changelog:
       - "^docs:"
       - "^ci:"
       - "^chore:"
+      - "^Merge pull request"
   groups:
     - title: Features
       regexp: '^.*?feat(\(.+\))??!?:.+$'
