@@ -17,15 +17,15 @@ Fetch raw data, aggregate data, and Master API reports straight from your termin
 ## Installation
 
 ```sh
-go install github.com/rie03p/appsflyer-cli@latest
+go install github.com/rie03p/appsflyer-cli/cmd/afcli@latest
 ```
 
-Or build from source:
+Or download a prebuilt binary from the [releases page](https://github.com/rie03p/appsflyer-cli/releases), or build from source:
 
 ```sh
 git clone https://github.com/rie03p/appsflyer-cli.git
 cd appsflyer-cli
-go build -o afcli .
+go build -o afcli ./cmd/afcli
 ```
 
 ## Authentication
