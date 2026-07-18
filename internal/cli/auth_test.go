@@ -67,7 +67,7 @@ func TestAuthStatus(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
-	if !strings.Contains(out, "Not logged in") {
+	if !strings.Contains(out, "Reporting token: not set") || !strings.Contains(out, "OneLink token:   not set") {
 		t.Errorf("out = %q", out)
 	}
 
@@ -96,7 +96,35 @@ func TestAuthLogout(t *testing.T) {
 	}
 
 	status, _ := run(t, "auth", "status")
-	if !strings.Contains(status, "Not logged in") {
+	if !strings.Contains(status, "Reporting token: not set") {
 		t.Errorf("status after logout = %q", status)
+	}
+}
+
+func TestAuthLoginOneLinkToken(t *testing.T) {
+	isolateConfig(t)
+
+	if _, err := run(t, "auth", "login", "--onelink", "--token", "onelink-token-1"); err != nil {
+		t.Fatal(err)
+	}
+	status, err := run(t, "auth", "status")
+	if err != nil {
+		t.Fatal(err)
+	}
+	if !strings.Contains(status, "onelink-...") {
+		t.Errorf("status = %q", status)
+	}
+	if !strings.Contains(status, "Reporting token: not set") {
+		t.Errorf("onelink login should not set the reporting token: %q", status)
+	}
+}
+
+func TestOneLinkMissingTokenError(t *testing.T) {
+	isolateConfig(t)
+	t.Setenv("ONELINK_API_TOKEN", "")
+
+	_, err := run(t, "onelink", "get", "abc123", "qwer9876")
+	if err == nil || !strings.Contains(err.Error(), "no OneLink API token") {
+		t.Fatalf("err = %v, want OneLink token error", err)
 	}
 }

@@ -21,16 +21,21 @@ func newAuthCmd() *cobra.Command {
 }
 
 func newAuthLoginCmd() *cobra.Command {
-	var token string
+	var (
+		token   string
+		onelink bool
+	)
 
 	cmd := &cobra.Command{
 		Use:   "login",
-		Short: "Save an API V2 token so you don't have to pass it on every call",
-		Long: `Save an AppsFlyer API V2 token to the local config file.
+		Short: "Save an API token so you don't have to pass it on every call",
+		Long: `Save an AppsFlyer API token to the local config file.
 
-An account admin can retrieve the token from the AppsFlyer dashboard
-under Settings > API tokens. Once saved, all commands use it
-automatically; --token and APPSFLYER_API_TOKEN still take precedence.`,
+By default this stores the API V2 (reporting) token; pass --onelink to
+store the OneLink API token instead, which is a separate credential.
+An account admin can retrieve both from the AppsFlyer dashboard. Once
+saved, all commands use them automatically; the corresponding flags
+and environment variables still take precedence.`,
 		Args: cobra.NoArgs,
 		RunE: func(cmd *cobra.Command, args []string) error {
 			if token == "" {
@@ -47,7 +52,11 @@ automatically; --token and APPSFLYER_API_TOKEN still take precedence.`,
 			if err != nil {
 				return err
 			}
-			cfg.Token = token
+			if onelink {
+				cfg.OneLinkToken = token
+			} else {
+				cfg.Token = token
+			}
 			path, err := config.Save(cfg)
 			if err != nil {
 				return err
@@ -58,6 +67,7 @@ automatically; --token and APPSFLYER_API_TOKEN still take precedence.`,
 	}
 
 	cmd.Flags().StringVar(&token, "token", "", "token to save (prompted for if omitted)")
+	cmd.Flags().BoolVar(&onelink, "onelink", false, "store the OneLink API token instead of the reporting token")
 	return cmd
 }
 
@@ -87,20 +97,29 @@ func newAuthStatusCmd() *cobra.Command {
 		Args:  cobra.NoArgs,
 		RunE: func(cmd *cobra.Command, args []string) error {
 			out := cmd.OutOrStdout()
-			if t := os.Getenv("APPSFLYER_API_TOKEN"); t != "" {
-				fmt.Fprintf(out, "Using token from APPSFLYER_API_TOKEN (%s)\n", mask(t))
-				return nil
-			}
 			cfg, err := config.Load()
 			if err != nil {
 				return err
 			}
-			if cfg.Token != "" {
-				path, _ := config.Path()
-				fmt.Fprintf(out, "Using token from %s (%s)\n", path, mask(cfg.Token))
-				return nil
+			path, _ := config.Path()
+
+			switch {
+			case os.Getenv("APPSFLYER_API_TOKEN") != "":
+				fmt.Fprintf(out, "Reporting token: APPSFLYER_API_TOKEN (%s)\n", mask(os.Getenv("APPSFLYER_API_TOKEN")))
+			case cfg.Token != "":
+				fmt.Fprintf(out, "Reporting token: %s (%s)\n", path, mask(cfg.Token))
+			default:
+				fmt.Fprintln(out, "Reporting token: not set. Run: afcli auth login")
 			}
-			fmt.Fprintln(out, "Not logged in. Run: afcli auth login")
+
+			switch {
+			case os.Getenv("ONELINK_API_TOKEN") != "":
+				fmt.Fprintf(out, "OneLink token:   ONELINK_API_TOKEN (%s)\n", mask(os.Getenv("ONELINK_API_TOKEN")))
+			case cfg.OneLinkToken != "":
+				fmt.Fprintf(out, "OneLink token:   %s (%s)\n", path, mask(cfg.OneLinkToken))
+			default:
+				fmt.Fprintln(out, "OneLink token:   not set. Run: afcli auth login --onelink")
+			}
 			return nil
 		},
 	}
@@ -109,22 +128,23 @@ func newAuthStatusCmd() *cobra.Command {
 func newAuthLogoutCmd() *cobra.Command {
 	return &cobra.Command{
 		Use:   "logout",
-		Short: "Delete the stored token",
+		Short: "Delete the stored tokens",
 		Args:  cobra.NoArgs,
 		RunE: func(cmd *cobra.Command, args []string) error {
 			cfg, err := config.Load()
 			if err != nil {
 				return err
 			}
-			if cfg.Token == "" {
-				fmt.Fprintln(cmd.OutOrStdout(), "No stored token.")
+			if cfg.Token == "" && cfg.OneLinkToken == "" {
+				fmt.Fprintln(cmd.OutOrStdout(), "No stored tokens.")
 				return nil
 			}
 			cfg.Token = ""
+			cfg.OneLinkToken = ""
 			if _, err := config.Save(cfg); err != nil {
 				return err
 			}
-			fmt.Fprintln(cmd.OutOrStdout(), "Stored token deleted.")
+			fmt.Fprintln(cmd.OutOrStdout(), "Stored tokens deleted.")
 			return nil
 		},
 	}

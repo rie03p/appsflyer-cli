@@ -11,7 +11,8 @@ import (
 )
 
 type Config struct {
-	Token string `json:"token,omitempty"`
+	Token        string `json:"token,omitempty"`
+	OneLinkToken string `json:"onelink_token,omitempty"`
 }
 
 // Dir honors AFCLI_CONFIG_DIR so tests and scripts can relocate the config.

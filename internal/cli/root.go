@@ -51,6 +51,7 @@ once to store it, or pass --token / set APPSFLYER_API_TOKEN.`,
 	cmd.AddCommand(newCohortCmd(opts))
 	cmd.AddCommand(newSKANCmd(opts))
 	cmd.AddCommand(newFreshnessCmd(opts))
+	cmd.AddCommand(newOneLinkCmd(opts))
 
 	return cmd
 }
