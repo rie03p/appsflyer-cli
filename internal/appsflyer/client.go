@@ -3,7 +3,9 @@
 package appsflyer
 
 import (
+	"bytes"
 	"context"
+	"encoding/json"
 	"fmt"
 	"io"
 	"net/http"
@@ -81,25 +83,41 @@ func (e *APIError) Error() string {
 
 // The caller must close the returned ReadCloser.
 func (c *Client) get(ctx context.Context, path string, query url.Values) (io.ReadCloser, error) {
+	return c.do(ctx, http.MethodGet, path, query, nil)
+}
+
+// The caller must close the returned ReadCloser.
+func (c *Client) postJSON(ctx context.Context, path string, query url.Values, body any) (io.ReadCloser, error) {
+	b, err := json.Marshal(body)
+	if err != nil {
+		return nil, err
+	}
+	return c.do(ctx, http.MethodPost, path, query, bytes.NewReader(b))
+}
+
+func (c *Client) do(ctx context.Context, method, path string, query url.Values, body io.Reader) (io.ReadCloser, error) {
 	u := c.baseURL + path
 	if len(query) > 0 {
 		u += "?" + query.Encode()
 	}
-	req, err := http.NewRequestWithContext(ctx, http.MethodGet, u, nil)
+	req, err := http.NewRequestWithContext(ctx, method, u, body)
 	if err != nil {
 		return nil, err
 	}
 	req.Header.Set("Authorization", "Bearer "+c.token)
 	req.Header.Set("Accept", "text/csv, application/json")
+	if body != nil {
+		req.Header.Set("Content-Type", "application/json")
+	}
 
 	resp, err := c.httpClient.Do(req)
 	if err != nil {
 		return nil, err
 	}
 	if resp.StatusCode < 200 || resp.StatusCode >= 300 {
-		body, _ := io.ReadAll(io.LimitReader(resp.Body, 4096))
+		respBody, _ := io.ReadAll(io.LimitReader(resp.Body, 4096))
 		resp.Body.Close()
-		return nil, &APIError{StatusCode: resp.StatusCode, Body: string(body)}
+		return nil, &APIError{StatusCode: resp.StatusCode, Body: string(respBody)}
 	}
 	return resp.Body, nil
 }

@@ -78,11 +78,15 @@ func parsePairs(pairs []string, flagName string) (map[string]string, error) {
 	for _, p := range pairs {
 		key, val, ok := strings.Cut(p, "=")
 		if !ok || key == "" || val == "" {
-			return nil, fmt.Errorf("%s expects key=value, got %q", flagName, p)
+			return nil, errKeyValue(flagName, p)
 		}
 		m[key] = val
 	}
 	return m, nil
+}
+
+func errKeyValue(flagName, got string) error {
+	return fmt.Errorf("%s expects key=value, got %q", flagName, got)
 }
 
 func contains(list []string, s string) bool {
