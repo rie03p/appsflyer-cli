@@ -1,0 +1,4 @@
+/afcli
+/dist/
+*.csv
+.DS_Store
