@@ -79,7 +79,6 @@ func (e *APIError) Error() string {
 	return msg
 }
 
-// get performs an authenticated GET and returns the response body stream.
 // The caller must close the returned ReadCloser.
 func (c *Client) get(ctx context.Context, path string, query url.Values) (io.ReadCloser, error) {
 	u := c.baseURL + path

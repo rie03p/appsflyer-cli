@@ -1,4 +1,5 @@
 /afcli
 /dist/
+CLAUDE.local.md
 *.csv
 .DS_Store

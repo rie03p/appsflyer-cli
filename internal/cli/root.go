@@ -64,7 +64,6 @@ func (o *rootOptions) client() (*appsflyer.Client, error) {
 	), nil
 }
 
-// write streams the report body to the configured output (file or stdout).
 func (o *rootOptions) write(cmd *cobra.Command, body io.ReadCloser) error {
 	defer body.Close()
 	out := cmd.OutOrStdout()
