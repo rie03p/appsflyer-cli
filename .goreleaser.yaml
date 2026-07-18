@@ -25,9 +25,9 @@ changelog:
   use: github
   filters:
     exclude:
-      - "^docs:"
-      - "^ci:"
-      - "^chore:"
+      - '^docs(\(.+\))?:'
+      - '^ci(\(.+\))?:'
+      - '^chore(\(.+\))?:'
       - "^Merge pull request"
   groups:
     - title: Features
