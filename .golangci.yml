@@ -1,0 +1,16 @@
+version: "2"
+
+linters:
+  settings:
+    errcheck:
+      # Terminal writes, best-effort closes on error paths, and
+      # MarkFlagRequired (which only fails on a missing flag name)
+      # have no actionable error to handle.
+      exclude-functions:
+        - fmt.Fprint
+        - fmt.Fprintf
+        - fmt.Fprintln
+        - io.WriteString
+        - (io.Closer).Close
+        - (io.ReadCloser).Close
+        - (*github.com/spf13/cobra.Command).MarkFlagRequired
