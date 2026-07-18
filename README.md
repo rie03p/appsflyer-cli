@@ -50,111 +50,42 @@ The OneLink API uses a **separate token** (ask your CSM or dashboard admin). Sto
 
 ## Usage
 
-### Raw data reports
+Every command documents its flags, defaults, and API limits — run `afcli <command> --help`. A quick tour:
 
 ```sh
-# Installs for the first week of July
+# Raw installs for the first week of July (afcli raw list shows all 20+ report names)
 afcli raw installs_report --app id123456789 --from 2026-07-01 --to 2026-07-07
 
 # Purchases from Japan, saved to a file
-afcli raw in_app_events_report --app id123456789 \
-  --from 2026-07-01 --to 2026-07-07 \
+afcli raw in_app_events_report --app id123456789 --from 2026-07-01 --to 2026-07-07 \
   --event-name af_purchase --geo JP -o purchases.csv
 
-# List all available raw report names
-afcli raw list
-```
-
-Raw reports cover user acquisition, organic, retargeting, ad revenue, Protect360 fraud, and postbacks. Responses are CSV. Useful flags: `--media-source`, `--geo`, `--event-name`, `--timezone`, `--currency`, `--max-rows`, `--additional-fields`.
-
-### Aggregate reports
-
-```sh
-# Partner (media source) performance
+# Aggregate partner performance (afcli agg list shows all report names)
 afcli agg partners_report --app id123456789 --from 2026-07-01 --to 2026-07-07
 
-# Daily geo breakdown as JSON
-afcli agg geo_by_date_report --app id123456789 \
-  --from 2026-07-01 --to 2026-07-07 --format json
-
-# List all available aggregate report names
-afcli agg list
-```
-
-Available reports: `partners_report`, `partners_by_date_report`, `daily_report`, `geo_report`, `geo_by_date_report`. Add `--reattr` for retargeting conversions and `--attribution-touch-type impression` for view-through attribution.
-
-### Master API
-
-Cross-app aggregate KPIs with custom groupings, filters, and calculated KPIs:
-
-```sh
-afcli master --app id123456789 \
-  --from 2026-07-01 --to 2026-07-07 \
-  --groupings pid,geo --kpis installs,clicks,impressions
-
-# All apps, filtered to one media source, with a calculated CTR
-afcli master --app all \
-  --from 2026-07-01 --to 2026-07-07 \
+# Cross-app KPIs with a calculated CTR, as JSON
+afcli master --app all --from 2026-07-01 --to 2026-07-07 \
   --groupings app_id,pid --kpis installs,clicks,impressions \
-  --filter pid=facebook \
-  --calculated-kpi ctr=clicks/impressions \
-  --format json
-```
+  --filter pid=facebook --calculated-kpi ctr=clicks/impressions --format json
 
-The date range is limited to 31 days by the API. Filters accept `pid`, `c`, `af_prt`, `af_channel`, `af_siteid`, and `geo`.
-
-### Cohort reports
-
-Retention, LTV, and ROAS by cohort day:
-
-```sh
+# Cumulative ROAS cohorts by media source and country
 afcli cohort --app id123456789 --from 2026-06-01 --to 2026-06-30 \
   --cohort-type user_acquisition --kpis users,roas --groupings pid,geo \
   --aggregation-type cumulative
 
-# On-day retention for specific cohort days, as CSV
-afcli cohort --app id123456789 --from 2026-06-01 --to 2026-06-30 \
-  --cohort-type unified --kpis retention --groupings pid \
-  --aggregation-type on_day --filter period=0,1,7,30 --format csv
-```
-
-### SKAN performance
-
-iOS SKAdNetwork attribution metrics (the SKAN dashboard as an API):
-
-```sh
+# iOS SKAdNetwork performance (SKAN 4 by default)
 afcli skan --app id123456789 --start-date 2026-07-01 --end-date 2026-07-07
-```
 
-Defaults to `--version v3` (SKAN 4 postbacks); use `--version v2` for SKAN 3. The date range is limited to 90 days.
-
-### Data freshness
-
-```sh
+# When was aggregated data last updated?
 afcli freshness
-```
 
-### OneLink short links
-
-Create, inspect, update, and delete OneLink short links programmatically (requires the OneLink API token, see Authentication):
-
-```sh
+# OneLink short links: create, inspect, update, delete
 afcli onelink create abc123 --param pid=email --param c=summer_sale --ttl 90d
 afcli onelink get abc123 qwer9876
-afcli onelink update abc123 qwer9876 --param pid=email --param c=autumn_sale
 afcli onelink delete abc123 qwer9876
 ```
 
-`abc123` is the OneLink template ID from the dashboard; `qwer9876` is the short link ID. `--param pid=...` (media source) is mandatory on create.
-
-### Global flags
-
-| Flag | Description |
-|---|---|
-| `--token` | API V2 token (defaults to `$APPSFLYER_API_TOKEN`) |
-| `-o, --output` | Write the report to a file instead of stdout |
-| `--timeout` | HTTP request timeout (default 5m) |
-| `--base-url` | Override the API host (default `https://hq1.appsflyer.com`) |
+Global flags on every report command: `-o/--output` (write to a file), `--token`, `--timeout`, `--base-url`.
 
 ## Development
 
