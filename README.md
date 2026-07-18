@@ -32,13 +32,15 @@ go build -o afcli ./cmd/afcli
 
 All requests use an **AppsFlyer API V2 token** (Bearer token). An account admin can retrieve it from the AppsFlyer dashboard under **Settings → API tokens**.
 
-Pass the token via the `APPSFLYER_API_TOKEN` environment variable (recommended):
+Store it once with `auth login` (recommended):
 
 ```sh
-export APPSFLYER_API_TOKEN="eyJhbGci..."
+afcli auth login   # prompts for the token, hidden input
+afcli auth status  # shows which token is in use
+afcli auth logout  # deletes the stored token
 ```
 
-or the `--token` flag on any command.
+The token is saved to your user config directory with `0600` permissions. Alternatively, set the `APPSFLYER_API_TOKEN` environment variable or pass `--token` on any command; precedence is `--token` > `APPSFLYER_API_TOKEN` > stored token.
 
 ## Usage
 
